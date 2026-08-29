@@ -29,7 +29,8 @@ func (s *Server) GetAllIncomesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) GetIncomesByMonthHandler(w http.ResponseWriter, r *http.Request) {
-	result, err := calculate.GetIncomesByMonth(s.db, "2026-06")
+	month := r.URL.Query().Get("period")
+	result, err := calculate.GetIncomesByMonth(s.db, month)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Ошибка сервера:\n%s", err), http.StatusInternalServerError)
 		return
@@ -42,7 +43,8 @@ func (s *Server) GetIncomesByMonthHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (s *Server) GetAllIncomesRecordsByMonthHandler(w http.ResponseWriter, r *http.Request) {
-	result, err := calculate.GetAllIncomesRecordsByMonth(s.db, "2026-07")
+	month := r.URL.Query().Get("period")
+	result, err := calculate.GetAllIncomesRecordsByMonth(s.db, month)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Ошибка сервера:\n%s", err), http.StatusInternalServerError)
 		return
@@ -55,7 +57,9 @@ func (s *Server) GetAllIncomesRecordsByMonthHandler(w http.ResponseWriter, r *ht
 }
 
 func (s *Server) GetIncomesRecordsByRangeHandler(w http.ResponseWriter, r *http.Request) {
-	result, err := calculate.GetIncomesRecordsByRange(s.db, "2026-05", "2026-07")
+	start_month := r.URL.Query().Get("from")
+	end_month := r.URL.Query().Get("to")
+	result, err := calculate.GetIncomesRecordsByRange(s.db, start_month, end_month)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Ошибка сервера:\n%s", err), http.StatusInternalServerError)
 		return
