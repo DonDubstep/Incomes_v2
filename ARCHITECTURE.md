@@ -8,7 +8,7 @@ SQLite - база
 
 # БД
 ### period
-id | period
+id | name
 
 ### Incomes 
 id | period_id | amount | Description | type_money_id | date
