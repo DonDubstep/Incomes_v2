@@ -7,6 +7,7 @@ import (
 	"incomes/calculate"
 	"log"
 	"net/http"
+	"os"
 
 	_ "modernc.org/sqlite"
 )
@@ -72,7 +73,10 @@ func (s *Server) GetIncomesRecordsByRangeHandler(w http.ResponseWriter, r *http.
 }
 
 func main() {
-	sql_path := "storage.db"
+	sql_path := os.Getenv("DB_PATH")
+	if sql_path == "" {
+		sql_path = "storage.db"
+	}
 	db, err := calculate.ConnectToDataBase(sql_path)
 	if err != nil {
 		fmt.Println("ошибка открытия БД %w", err)
@@ -88,9 +92,12 @@ func main() {
 	http.HandleFunc("/2", server.GetIncomesByMonthHandler)
 	http.HandleFunc("/3", server.GetAllIncomesRecordsByMonthHandler)
 	http.HandleFunc("/4", server.GetIncomesRecordsByRangeHandler)
-	port := ":8080"
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8001"
+	}
 	fmt.Println("Сервер запущен на порту", port)
-	if err := http.ListenAndServe(port, nil); err != nil {
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)
 	}
 }
