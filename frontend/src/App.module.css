@@ -1,0 +1,21 @@
+/* Главный контейнер всего приложения */
+.appContainer {
+  display: flex; /* Выстраивает Sidebar и mainContent в одну линию по горизонтали */
+  min-height: 100vh;
+  background-color: #121212;
+}
+
+/* Правая часть с основным контентом */
+.mainContent {
+  flex: 1; /* Занимает всё оставшееся свободное место справа */
+  padding: 32px;
+  overflow-y: auto; /* Позволяет прокручивать контент, если он не влезает по высоте */
+}
+
+/* Сетка для верхних карточек статистики */
+.statsGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr; /* Первая карточка в 2 раза шире двух других */
+  gap: 16px;
+  margin-bottom: 24px;
+}
