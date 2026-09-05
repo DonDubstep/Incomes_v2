@@ -6,18 +6,16 @@ function TransactionsList() {
     {
       id: 1,
       title: 'Зарплата',
-      subtitle: 'Основная работа',
       amount: '+120 000 ₽',
       date: '31 мая 2024',
-      icon: '💼',
+      icon: '🕑',
     },
     {
       id: 2,
-      title: 'Фриланс проект',
-      subtitle: 'Дизайн сайта',
+      title: 'Кешбек',
       amount: '+25 000 ₽',
       date: '28 мая 2024',
-      icon: '💻',
+      icon: '%',
     },
     {
       id: 3,
@@ -40,7 +38,6 @@ function TransactionsList() {
               <div className={styles.iconCircle}>{tx.icon}</div>
               <div className={styles.info}>
                 <div className={styles.txTitle}>{tx.title}</div>
-                <div className={styles.txSubtitle}>{tx.subtitle}</div>
               </div>
             </div>
 

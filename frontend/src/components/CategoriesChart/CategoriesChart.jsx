@@ -3,17 +3,16 @@ import styles from './CategoriesChart.module.css';
 
 function CategoriesChart() {
   const categoriesData = [
-    { id: 1, name: 'Зарплата', value: '180 000 ₽', percentage: 73, color: '#388e3c', icon: '💼' },
-    { id: 2, name: 'Фриланс', value: '45 000 ₽', percentage: 18, color: '#2e7d32', icon: '💻' },
-    { id: 3, name: 'Инвестиции', value: '15 500 ₽', percentage: 6, color: '#1b5e20', icon: '📈' },
-    { id: 4, name: 'Другое', value: '4 620 ₽', percentage: 3, color: '#0d3c10', icon: '📁' },
+    { id: 1, name: 'Безналичными', value: '180 000', percentage: 73, color: '#388e3c', icon: '₽' },
+    { id: 2, name: 'Наличными',    value: '45 000', percentage: 18, color: '#388e3c', icon: '💵' },
+    { id: 3, name: 'В долларах',   value: '15 500', percentage: 6, color: '#388e3c', icon: '💱' },
+    { id: 4, name: 'В дирхамах',   value: '4 620', percentage: 3, color: '#388e3c', icon: '💱' },
   ];
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h3 className={styles.title}>Доходы по категориям</h3>
-        <button className={styles.detailsBtn}>Подробнее</button>
+        <h3 className={styles.title}>Денежные средства</h3>
       </div>
       
       <div className={styles.chartArea}>

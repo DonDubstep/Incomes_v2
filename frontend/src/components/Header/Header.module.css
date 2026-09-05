@@ -34,25 +34,32 @@
   gap: 16px;
 }
 
-.notification {
-  font-size: 20px;
-  position: relative;
+.addBtn {
+  background-color: #3b5e43; /* Тот самый зелёный оттенок с картинки */
+  color: #ffffff;
+  border: none;
+  border-radius: 8px; /* Скругление углов */
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Расстояние между плюсиком и текстом */
+  transition: background-color 0.2s, transform 0.1s;
 }
 
-.badge {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 8px;
-  height: 8px;
-  background-color: #ff4d4f;
-  border-radius: 50%;
+/* Эффект при наведении мышкой */
+.addBtn:hover {
+  background-color: #466e4f;
 }
 
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid #444;
+/* Эффект при клике */
+.addBtn:active {
+  transform: scale(0.98);
+}
+
+.plus {
+  font-size: 16px;
+  font-weight: 600;
 }

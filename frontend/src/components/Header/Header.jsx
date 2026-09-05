@@ -8,19 +8,11 @@ function Header() {
       
       <div className={styles.controls}>
         <div className={styles.datePicker}>
-          📅 1 мая — 31 мая 2024
+          Текущая дата
         </div>
-        
-        <div className={styles.actions}>
-          <div className={styles.notification}>
-            🔔<span className={styles.badge}></span>
-          </div>
-          <img 
-            src="https://via.placeholder.com/40" // Или ссылка на реальное фото
-            alt="User profile" 
-            className={styles.avatar}
-          />
-        </div>
+        <button className={styles.addBtn}>
+          <span className={styles.plus}>+</span> Добавить цель
+        </button>
       </div>
     </header>
   );

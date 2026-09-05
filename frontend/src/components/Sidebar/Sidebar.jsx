@@ -11,7 +11,7 @@ function Sidebar() {
 
   return (
     <aside className={styles.sidebar}>
-      <div className={styles.logo}>💼</div>
+      <div className={styles.logo}>Incomes</div>
       <nav className={styles.nav}>
         <ul>
           {menuItems.map((item) => (
