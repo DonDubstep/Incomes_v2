@@ -1,33 +1,40 @@
+import { useEffect, useState } from 'react';
 import styles from './StatsCards.module.css';
 
-// 📦 Тестовые данные прямо в JSX-файле
-const initialStats = [
-  {
-    id: 1,
-    title: 'Общая сумма',
-    value: '280 000',
-    isMain: true,
-  },
-  {
-    id: 2,
-    title: 'Доход за последний месяц',
-    value: '7 907',
-    isMain: false,
-  },
-  {
-    id: 3,
-    title: 'Изменение общей суммы',
-    value: '28',
-    isMain: false,
-  },
-];
-
 function StatsCards() {
-  // Находим главную карточку для левой колонки 👈
-  const mainCard = initialStats.find((item) => item.isMain);
+  const [stats, setStats] = useState([]);
+  const [loading, setLoading] = useState(true); 
 
-  // Оставляем остальные карточки для правой колонки 👉
-  const secondaryCards = initialStats.filter((item) => !item.isMain);
+  useEffect(() => {
+
+    Promise.all([
+      fetch('/api/2?period=2026-06').then((res) => res.json()),
+      fetch('/api/2?period=2026-07').then((res) => res.json()),
+      fetch('/api/2?period=2026-05').then((res) => res.json()),
+    ])
+    .then(([totalData, monthlyData, changeData]) => {
+      setStats([
+        {id: 1, title: 'Общая сумма', value: totalData, isMain:true },
+        {id: 2, title: 'Доход за последний месяц', value: monthlyData, isMain:false },
+        {id: 3, title: 'Изменение общей суммы', value: changeData, isMain:false },
+      ]);
+      setLoading(false);
+    })
+    .catch((error) => {
+      console.error('Ошибка при загрузке', error);
+      setLoading(false);
+    });
+  }, []);
+
+  if(loading) {
+    return <div>Загрузка...</div>;
+  }
+
+  // Находим главную карточку для левой колонки
+  const mainCard = stats.find((item) => item.isMain);
+
+  // Оставляем остальные карточки для правой колонки
+  const secondaryCards = stats.filter((item) => !item.isMain);
 
   return (
     <div className={styles.container}>

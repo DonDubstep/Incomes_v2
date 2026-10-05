@@ -75,7 +75,7 @@ func (s *Server) GetIncomesRecordsByRangeHandler(w http.ResponseWriter, r *http.
 func main() {
 	sql_path := os.Getenv("DB_PATH")
 	if sql_path == "" {
-		sql_path = "storage.db"
+		sql_path = "../data/storage.db"
 	}
 	db, err := calculate.ConnectToDataBase(sql_path)
 	if err != nil {
@@ -83,15 +83,15 @@ func main() {
 		return
 	}
 	defer db.Close()
-	calculate.CreateTable(db)
-	calculate.FillTable(db)
+	// calculate.CreateTable(db)
+	// calculate.FillTable(db)
 
 	server := Server{db}
 
-	http.HandleFunc("/1", server.GetAllIncomesHandler)
-	http.HandleFunc("/2", server.GetIncomesByMonthHandler)
-	http.HandleFunc("/3", server.GetAllIncomesRecordsByMonthHandler)
-	http.HandleFunc("/4", server.GetIncomesRecordsByRangeHandler)
+	http.HandleFunc("/api/1", server.GetAllIncomesHandler)
+	http.HandleFunc("/api/2", server.GetIncomesByMonthHandler)
+	http.HandleFunc("/api/3", server.GetAllIncomesRecordsByMonthHandler)
+	http.HandleFunc("/api/4", server.GetIncomesRecordsByRangeHandler)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8001"
