@@ -48,6 +48,20 @@ func CreateTable(db *sql.DB) {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			name TEXT NOT NULL
 		);
+
+		CREATE TABLE IF NOT EXISTS currency (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL UNIQUE
+		);
+
+		CREATE TABLE IF NOT EXISTS amount (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			type_money_id INTEGER NOT NULL,
+			currency_id INTEGER NOT NULL,
+			sum INTEGER,
+			FOREIGN KEY (type_money_id) REFERENCES type_of_money(id),
+			FOREIGN KEY (currency_id) REFERENCES currency(id)
+		);
 	
 	`)
 	if err != nil {
@@ -81,6 +95,22 @@ func FillTable(db *sql.DB) {
 			(3, 40000, NULL, 1, '2026-07-29'),
 			(3, 10000, NULL, 2, '2026-08-10'),
 			(4, 50000, NULL, 2, '2026-09-14');
+
+		INSERT INTO currency 
+			(name)
+		VALUES 
+			("rub"),
+			("usd"),
+			("aed");
+
+
+		INSERT INTO amount 
+			(type_money_id, currency_id, sum)
+		VALUES 
+			(1, 0, 107000),
+			(0, 0, 140000),
+			(0, 1, 200),
+			(0, 2, 400);
 	`)
 	if err != nil {
 		log.Fatal(err)
@@ -201,6 +231,22 @@ func GetIncomesRecordsByRange(db *sql.DB, req_period_start string, req_period_en
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("ошибка при обходе результата: %w", err)
+	}
+	return result, nil
+}
+
+func GetAmountOfMoneyRub(db *sql.DB) (int, error) {
+	query := `	select SUM(sum) 
+			from amount a
+			where a.currency_id = 0`
+
+	var result int
+	err := db.QueryRow(query).Scan(&result)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, fmt.Errorf("запрос вернул ничего GetAmountOfMoneyRub %w", err) // Возвращаем 0 и nil (ошибки нет, просто ничего не нашли)
+		}
+		return 0, fmt.Errorf("ошибка запроса GetAmountOfMoneyRub %w", err)
 	}
 	return result, nil
 }

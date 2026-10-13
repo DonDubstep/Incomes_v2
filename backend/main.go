@@ -72,6 +72,19 @@ func (s *Server) GetIncomesRecordsByRangeHandler(w http.ResponseWriter, r *http.
 	json.NewEncoder(w).Encode(result)
 }
 
+func (s *Server) GetAmountOfMoneyRubHandler(w http.ResponseWriter, r *http.Request) {
+	result, err := calculate.GetAmountOfMoneyRub(s.db)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Ошибка сервера:\n%s", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Указываем, что будем отправлять в формате JSON
+	w.Header().Set("Content-Type", "application/json")
+	// Кодируем срез в json и отправляем
+	json.NewEncoder(w).Encode(result)
+}
+
 func main() {
 	sql_path := os.Getenv("DB_PATH")
 	if sql_path == "" {
@@ -92,6 +105,7 @@ func main() {
 	http.HandleFunc("/api/2", server.GetIncomesByMonthHandler)
 	http.HandleFunc("/api/3", server.GetAllIncomesRecordsByMonthHandler)
 	http.HandleFunc("/api/4", server.GetIncomesRecordsByRangeHandler)
+	http.HandleFunc("/api/5", server.GetAmountOfMoneyRubHandler)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8001"

@@ -8,7 +8,7 @@ function StatsCards() {
   useEffect(() => {
 
     Promise.all([
-      fetch('/api/2?period=2026-06').then((res) => res.json()),
+      fetch('/api/5').then((res) => res.json()),
       fetch('/api/2?period=2026-07').then((res) => res.json()),
       fetch('/api/2?period=2026-05').then((res) => res.json()),
     ])

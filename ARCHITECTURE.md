@@ -24,12 +24,23 @@ id | name|
 1. Наличные
 2. Безналичные
 
+### Amount 
+id | type_money_id | currency_id | sum
+
+### Currency 
+id | name
+1. Рубли
+2. Доллары
+3. Дирхамы
+...
+
 # Go функционал
 ### GET
 - <b>GetIncomesByMonth</b> Возвращает сумму доходов за месяц (сумма)
 - <b>GetAllIncomesRecordsByMonth</b> Возвращает все записи о доходах за месяц (Дата, сумма, описание, тип)
 - <b>GetOutcomesByMonth</b> Возвращает сумму расходов за месяц (сумма)
 - <b>GetAllOutcomesRecordsByMonth</b> Возвращает все записи расходов за месяц (дата, сумма, описание, категория)
+- <b>GetAmountOfMoneyRub</b> Возвращает всю сумму денег в рублях 
 
 
 ### POST
