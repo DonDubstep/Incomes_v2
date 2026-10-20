@@ -10,22 +10,10 @@ SQLite - база
 ### period
 id | name
 
-### Incomes 
-id | period_id | amount | Description | type_money_id | date
-
-### Outcomes 
-id | period_id | amount | category_id | Description | date
-
-### Category
-id | name
-
 ### Type of money
 id | name|
 1. Наличные
 2. Безналичные
-
-### Amount 
-id | type_money_id | currency_id | sum
 
 ### Currency 
 id | name
@@ -33,6 +21,16 @@ id | name
 2. Доллары
 3. Дирхамы
 ...
+
+### monthly_balances 
+id | period_id | type_money_id | currency_id | actual_sum
+
+### Incomes 
+id | period_id | amount | Description | type_money_id | date
+
+### Outcomes 
+id | period_id | amount | Description | date
+
 
 # Go функционал
 ### GET

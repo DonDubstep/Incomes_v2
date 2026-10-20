@@ -19,18 +19,36 @@ func ConnectToDataBase(sql_path string) (*sql.DB, error) {
 // Функция создания таблицы
 func CreateTable(db *sql.DB) {
 	_, err := db.Exec(`
+
+		CREATE TABLE IF NOT EXISTS period (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL UNIQUE
+		);
+
+		CREATE TABLE IF NOT EXISTS type_money (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS currency (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL UNIQUE
+		);
+
 		CREATE TABLE IF NOT EXISTS category (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			name TEXT NOT NULL
 		);
-		CREATE TABLE IF NOT EXISTS type_of_money (
+
+		CREATE TABLE IF NOT EXISTS monthly_balances (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			name TEXT NOT NULL
-		);
-		
-		CREATE TABLE IF NOT EXISTS period (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			name TEXT NOT NULL UNIQUE
+			period_id INTEGER NOT NULL,
+			type_money_id INTEGER NOT NULL,
+			currency_id INTEGER NOT NULL,
+			actual_sum INTEGER,
+			FOREIGN KEY (period_id) REFERENCES period(id),
+			FOREIGN KEY (type_money_id) REFERENCES type_money(id),
+			FOREIGN KEY (currency_id) REFERENCES currency(id)
 		);
 
 		CREATE TABLE IF NOT EXISTS incomes (
@@ -41,26 +59,16 @@ func CreateTable(db *sql.DB) {
 			type_money_id INTEGER NOT NULL,
 			date TEXT NOT NULL,
 			FOREIGN KEY (period_id) REFERENCES period(id),
-			FOREIGN KEY (type_money_id) REFERENCES type_of_money(id)
+			FOREIGN KEY (type_money_id) REFERENCES type_money(id)
 		);
 
-		CREATE TABLE IF NOT EXISTS type_of_money (
+		CREATE TABLE IF NOT EXISTS outcomes (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			name TEXT NOT NULL
-		);
-
-		CREATE TABLE IF NOT EXISTS currency (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			name TEXT NOT NULL UNIQUE
-		);
-
-		CREATE TABLE IF NOT EXISTS amount (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			type_money_id INTEGER NOT NULL,
-			currency_id INTEGER NOT NULL,
-			sum INTEGER,
-			FOREIGN KEY (type_money_id) REFERENCES type_of_money(id),
-			FOREIGN KEY (currency_id) REFERENCES currency(id)
+			period_id INTEGER NOT NULL,
+			amount INTEGER NOT NULL,
+			description TEXT,
+			date TEXT NOT NULL,
+			FOREIGN KEY (period_id) REFERENCES period(id)
 		);
 	
 	`)
@@ -73,11 +81,6 @@ func CreateTable(db *sql.DB) {
 // Функция заполнения таблицы
 func FillTable(db *sql.DB) {
 	_, err := db.Exec(`
-		INSERT INTO type_of_money 
-			(name)
-		VALUES 
-			('Наличные'),
-			('Безналичные');
 
 		INSERT INTO period 
 			(name)
@@ -86,15 +89,12 @@ func FillTable(db *sql.DB) {
 			('2026-06'),
 			('2026-07'),
 			('2026-08');
-			
-		INSERT INTO incomes 
-			(period_id, amount, Description, type_money_id, date)
+
+		INSERT INTO type_money 
+			(name)
 		VALUES 
-			(1, 20000, NULL, 1, '2026-05-29'),
-			(2, 30000, NULL, 1, '2026-06-29'),
-			(3, 40000, NULL, 1, '2026-07-29'),
-			(3, 10000, NULL, 2, '2026-08-10'),
-			(4, 50000, NULL, 2, '2026-09-14');
+			('Наличные'),
+			('Безналичные');
 
 		INSERT INTO currency 
 			(name)
@@ -103,14 +103,24 @@ func FillTable(db *sql.DB) {
 			("usd"),
 			("aed");
 
-
-		INSERT INTO amount 
-			(type_money_id, currency_id, sum)
+			
+		INSERT INTO monthly_balances 
+			(period_id, type_money_id, currency_id, actual_sum)
 		VALUES 
-			(1, 0, 107000),
-			(0, 0, 140000),
-			(0, 1, 200),
-			(0, 2, 400);
+			(0, 0, 0, 100000),
+			(1, 0, 0, 130000),
+			(2, 0, 0, 170000),
+			(3, 0, 0, 200000),
+			(4, 0, 0, 230000);
+
+		INSERT INTO incomes 
+			(period_id, amount, Description, type_money_id, date)
+		VALUES 
+			(1, 20000, NULL, 1, '2026-05-29'),
+			(2, 30000, NULL, 1, '2026-06-29'),
+			(3, 40000, NULL, 1, '2026-07-29'),
+			(3, 10000, NULL, 2, '2026-08-10');
+
 	`)
 	if err != nil {
 		log.Fatal(err)
@@ -127,7 +137,7 @@ type IncomesRecords struct {
 	Date        string  `json:"date"`
 	Total       float64 `json:"total"`
 	Description string  `json:"description"`
-	TypeOfMoney string  `json:"type_of_money"`
+	TypeOfMoney string  `json:"type_money"`
 }
 
 // Выводит все доходы из БД
@@ -186,7 +196,7 @@ func GetAllIncomesRecordsByMonth(db *sql.DB, req_period string) ([]IncomesRecord
 	query := `	select i.date, i.amount, COALESCE(i.description, ''), t.name 
 				from incomes i
 				inner join period p on i.period_id = p.id
-				inner join type_of_money t on i.type_money_id = t.id
+				inner join type_money t on i.type_money_id = t.id
 				where p.name = ?`
 
 	rows, err := db.Query(query, req_period)
@@ -213,7 +223,7 @@ func GetIncomesRecordsByRange(db *sql.DB, req_period_start string, req_period_en
 	query := `	select i.date, i.amount, COALESCE(i.description, ''), t.name 
 				from incomes i
 				inner join period p on i.period_id = p.id
-				inner join type_of_money t on i.type_money_id = t.id
+				inner join type_money t on i.type_money_id = t.id
 				where p.name >= ? and p.name <= ?`
 
 	rows, err := db.Query(query, req_period_start, req_period_end)
@@ -236,9 +246,14 @@ func GetIncomesRecordsByRange(db *sql.DB, req_period_start string, req_period_en
 }
 
 func GetAmountOfMoneyRub(db *sql.DB) (int, error) {
-	query := `	select SUM(sum) 
-			from amount a
-			where a.currency_id = 0`
+	query := `	SELECT SUM(m.actual_sum)
+				FROM monthly_balances m
+				WHERE m.period_id = (
+					select m.period_id
+					from monthly_balances m
+					inner join period p on p.id = m.period_id
+					order by p.name desc limit 1
+				);`
 
 	var result int
 	err := db.QueryRow(query).Scan(&result)
@@ -250,3 +265,27 @@ func GetAmountOfMoneyRub(db *sql.DB) (int, error) {
 	}
 	return result, nil
 }
+
+// Возвращает доход за последний месяц
+func GetAmountOfLastIncome(db *sql.DB) (int, error) {
+	query := `SELECT SUM(amount)
+			  FROM incomes 
+			  where period_id = (
+				select i.period_id
+				from incomes i
+				inner join period p on p.id = i.period_id
+				order by p.name desc limit 1
+				);`
+
+	var result int
+	err := db.QueryRow(query).Scan(&result)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, fmt.Errorf("запрос вернул ничего GetAmountOfLastIncome %w", err) // Возвращаем 0 и nil (ошибки нет, просто ничего не нашли)
+		}
+		return 0, fmt.Errorf("ошибка запроса GetAmountOfLastIncome %w", err)
+	}
+	return result, nil
+}
+
+// Я поменял базу и теперь надо починить запросы на первые три карточки
