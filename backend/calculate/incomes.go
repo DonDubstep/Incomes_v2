@@ -16,6 +16,38 @@ func ConnectToDataBase(sql_path string) (*sql.DB, error) {
 	return db, nil
 }
 
+// Удаление всех таблиц в БД
+func ResetDatabase(db *sql.DB) error {
+	rows, err := db.Query(`
+		SELECT name FROM sqlite_master
+		WHERE type='table' AND name NOT LIKE 'sqlite_%'
+	`)
+	if err != nil {
+		return fmt.Errorf("query tables: %w", err)
+	}
+	defer rows.Close()
+
+	var tables []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return fmt.Errorf("scan table name: %w", err)
+		}
+		tables = append(tables, name)
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("iterate tables: %w", err)
+	}
+
+	for _, table := range tables {
+		if _, err := db.Exec(fmt.Sprintf(`DROP TABLE IF EXISTS "%s"`, table)); err != nil {
+			return fmt.Errorf("drop table %s: %w", table, err)
+		}
+	}
+	log.Print("wiped")
+	return nil
+}
+
 // Функция создания таблицы
 func CreateTable(db *sql.DB) {
 	_, err := db.Exec(`
@@ -32,6 +64,7 @@ func CreateTable(db *sql.DB) {
 
 		CREATE TABLE IF NOT EXISTS currency (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			abbr TEXT NOT NULL UNIQUE,
 			name TEXT NOT NULL UNIQUE
 		);
 
@@ -97,21 +130,25 @@ func FillTable(db *sql.DB) {
 			('Безналичные');
 
 		INSERT INTO currency 
-			(name)
+			(name, abbr)
 		VALUES 
-			("rub"),
-			("usd"),
-			("aed");
+			("Рубли","rub"),
+			("Доллары","usd"),
+			("Дирхамы","aed");
 
 			
 		INSERT INTO monthly_balances 
 			(period_id, type_money_id, currency_id, actual_sum)
 		VALUES 
-			(0, 0, 0, 100000),
-			(1, 0, 0, 130000),
-			(2, 0, 0, 170000),
-			(3, 0, 0, 200000),
-			(4, 0, 0, 230000);
+			(1, 2, 1, 100000),
+			(1, 1, 1, 50000),
+			(1, 1, 2, 200),
+			(1, 1, 3, 500),
+			(2, 1, 1, 80000),
+			(3, 1, 1, 100000),
+			(4, 1, 1, 130000),
+			(5, 1, 1, 150000),
+			(5, 2, 1, 110000);
 
 		INSERT INTO incomes 
 			(period_id, amount, Description, type_money_id, date)
@@ -324,3 +361,5 @@ func GetTotalLastChange(db *sql.DB) (int, error) {
 	}
 	return result, nil
 }
+
+// Возвращает сумму денег в каждой валюте в виде таблицы

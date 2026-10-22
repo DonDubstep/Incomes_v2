@@ -122,8 +122,11 @@ func main() {
 		return
 	}
 	defer db.Close()
-	// calculate.CreateTable(db)
-	// calculate.FillTable(db)
+	if err = calculate.ResetDatabase(db); err != nil {
+		fmt.Print(err)
+	}
+	calculate.CreateTable(db)
+	calculate.FillTable(db)
 
 	server := Server{db}
 
