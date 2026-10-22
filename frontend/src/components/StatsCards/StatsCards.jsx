@@ -10,7 +10,7 @@ function StatsCards() {
     Promise.all([
       fetch('/api/5').then((res) => res.json()),
       fetch('/api/6').then((res) => res.json()),
-      fetch('/api/2?period=2026-05').then((res) => res.json()),
+      fetch('/api/7').then((res) => res.json()),
     ])
     .then(([totalData, monthlyData, changeData]) => {
       setStats([

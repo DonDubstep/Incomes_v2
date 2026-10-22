@@ -288,4 +288,39 @@ func GetAmountOfLastIncome(db *sql.DB) (int, error) {
 	return result, nil
 }
 
-// Я поменял базу и теперь надо починить запросы на первые три карточки
+// Возвращает прирост/уменьшение общей суммы относительно предыдущего периода
+func GetTotalLastChange(db *sql.DB) (int, error) {
+	query := `	WITH totals AS (
+				SELECT
+					mb.period_id,
+					p.name AS period_name,
+					SUM(mb.actual_sum) AS total_sum
+				FROM monthly_balances mb
+				JOIN period p ON p.id = mb.period_id
+				GROUP BY mb.period_id, p.name
+			),
+			ranked AS (
+				SELECT
+					period_id,
+					period_name,
+					total_sum,
+					LAG(total_sum) OVER (ORDER BY period_name) AS prev_total
+				FROM totals
+			)
+			SELECT
+				total_sum - prev_total   AS diff
+			FROM ranked
+			ORDER BY period_name DESC
+			LIMIT 1;
+			;`
+
+	var result int
+	err := db.QueryRow(query).Scan(&result)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, fmt.Errorf("запрос вернул ничего GetAmountOfLastIncome %w", err) // Возвращаем 0 и nil (ошибки нет, просто ничего не нашли)
+		}
+		return 0, fmt.Errorf("ошибка запроса GetAmountOfLastIncome %w", err)
+	}
+	return result, nil
+}
