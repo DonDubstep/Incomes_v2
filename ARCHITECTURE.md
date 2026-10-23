@@ -10,13 +10,13 @@ SQLite - база
 ### period
 id | name
 
-### Type of money
+### type_money
 id | name|
 1. Наличные
 2. Безналичные
 
 ### Currency 
-id | name
+id | abbr |name | cource
 1. Рубли
 2. Доллары
 3. Дирхамы
@@ -26,15 +26,16 @@ id | name
 id | period_id | type_money_id | currency_id | actual_sum
 
 ### Incomes 
-id | period_id | amount | Description | type_money_id | date
+id  | amount | Description | type_money_id | date
 
 ### Outcomes 
-id | period_id | amount | Description | date
+id | amount | Description | date
 
 
 # Go функционал
 ### GET
 - <b>GetIncomesByMonth</b> Возвращает сумму доходов за месяц (сумма)
+/2?period=2026-06
 - <b>GetAllIncomesRecordsByMonth</b> Возвращает все записи о доходах за месяц (Дата, сумма, описание, тип)
 - <b>GetOutcomesByMonth</b> Возвращает сумму расходов за месяц (сумма)
 - <b>GetAllOutcomesRecordsByMonth</b> Возвращает все записи расходов за месяц (дата, сумма, описание, категория)

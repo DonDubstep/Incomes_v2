@@ -65,7 +65,8 @@ func CreateTable(db *sql.DB) {
 		CREATE TABLE IF NOT EXISTS currency (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			abbr TEXT NOT NULL UNIQUE,
-			name TEXT NOT NULL UNIQUE
+			name TEXT NOT NULL UNIQUE,
+			cource DOUBLE NOT NULL
 		);
 
 		CREATE TABLE IF NOT EXISTS category (
@@ -86,12 +87,10 @@ func CreateTable(db *sql.DB) {
 
 		CREATE TABLE IF NOT EXISTS incomes (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			period_id INTEGER NOT NULL,
 			amount INTEGER NOT NULL,
 			description TEXT,
 			type_money_id INTEGER NOT NULL,
 			date TEXT NOT NULL,
-			FOREIGN KEY (period_id) REFERENCES period(id),
 			FOREIGN KEY (type_money_id) REFERENCES type_money(id)
 		);
 
@@ -130,11 +129,11 @@ func FillTable(db *sql.DB) {
 			('Безналичные');
 
 		INSERT INTO currency 
-			(name, abbr)
+			(name, abbr, cource)
 		VALUES 
-			("Рубли","rub"),
-			("Доллары","usd"),
-			("Дирхамы","aed");
+			("Рубли","rub", 1.0),
+			("Доллары","usd", 80.65),
+			("Дирхамы","aed", 21.96);
 
 			
 		INSERT INTO monthly_balances 
@@ -151,12 +150,12 @@ func FillTable(db *sql.DB) {
 			(5, 2, 1, 110000);
 
 		INSERT INTO incomes 
-			(period_id, amount, Description, type_money_id, date)
+			(amount, Description, type_money_id, date)
 		VALUES 
-			(1, 20000, NULL, 1, '2026-05-29'),
-			(2, 30000, NULL, 1, '2026-06-29'),
-			(3, 40000, NULL, 1, '2026-07-29'),
-			(3, 10000, NULL, 2, '2026-08-10');
+			(20000, NULL, 1, '2026-05-29'),
+			(30000, NULL, 1, '2026-06-29'),
+			(40000, NULL, 1, '2026-07-29'),
+			(10000, NULL, 2, '2026-08-10');
 
 	`)
 	if err != nil {
@@ -177,120 +176,22 @@ type IncomesRecords struct {
 	TypeOfMoney string  `json:"type_money"`
 }
 
-// Выводит все доходы из БД
-func GetAllIncomes(db *sql.DB) ([]IncomesByPeriod, error) {
-	query := `	SELECT p.name, COALESCE(SUM(i.amount), 0) 
-				FROM period p 
-				LEFT JOIN incomes i 
-				ON i.period_id = p.id
-				GROUP BY p.id, p.name
-				ORDER BY p.id;`
-
-	rows, err := db.Query(query)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка выполнения запроса: %w", err)
-	}
-
-	var result []IncomesByPeriod
-
-	for rows.Next() {
-		var r IncomesByPeriod
-		if err := rows.Scan(&r.Period, &r.Total); err != nil {
-			return nil, fmt.Errorf("ошибка чтения строки: %w", err)
-		}
-		result = append(result, r)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("ошибка при обходе результата: %w", err)
-	}
-
-	return result, nil
-}
-
-// Выводит доход за выбранный месяц
-func GetIncomesByMonth(db *sql.DB, req_period string) (int, error) {
-	query := `	select sum(i.amount) 
-				from incomes i 
-				inner join period p on i.period_id = p.id
-				where p.name = ?
-				`
-
-	var result int
-	err := db.QueryRow(query, req_period).Scan(&result)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return 0, fmt.Errorf("запрос вернул ничего GetIncomesByMonth %w", err) // Возвращаем 0 и nil (ошибки нет, просто ничего не нашли)
-		}
-		return 0, fmt.Errorf("ошибка запроса GetIncomesByMonth %w", err)
-	}
-	return result, nil
-
-}
-
-// Выводит все записи доходов за выбраный месяц
-func GetAllIncomesRecordsByMonth(db *sql.DB, req_period string) ([]IncomesRecords, error) {
-	query := `	select i.date, i.amount, COALESCE(i.description, ''), t.name 
-				from incomes i
-				inner join period p on i.period_id = p.id
-				inner join type_money t on i.type_money_id = t.id
-				where p.name = ?`
-
-	rows, err := db.Query(query, req_period)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка выполнения запроса: %w", err)
-	}
-
-	var result []IncomesRecords
-	for rows.Next() {
-		var el IncomesRecords
-		if err := rows.Scan(&el.Date, &el.Total, &el.Description, &el.TypeOfMoney); err != nil {
-			return nil, fmt.Errorf("ошибка чтения строки %w", err)
-		}
-		result = append(result, el)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("ошибка при обходе результата: %w", err)
-	}
-	return result, nil
-}
-
-// Выводит все записи за выбранный диапазон
-func GetIncomesRecordsByRange(db *sql.DB, req_period_start string, req_period_end string) ([]IncomesRecords, error) {
-	query := `	select i.date, i.amount, COALESCE(i.description, ''), t.name 
-				from incomes i
-				inner join period p on i.period_id = p.id
-				inner join type_money t on i.type_money_id = t.id
-				where p.name >= ? and p.name <= ?`
-
-	rows, err := db.Query(query, req_period_start, req_period_end)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка выполнения запроса: %w", err)
-	}
-
-	var result []IncomesRecords
-	for rows.Next() {
-		var el IncomesRecords
-		if err := rows.Scan(&el.Date, &el.Total, &el.Description, &el.TypeOfMoney); err != nil {
-			return nil, fmt.Errorf("ошибка чтения строки %w", err)
-		}
-		result = append(result, el)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("ошибка при обходе результата: %w", err)
-	}
-	return result, nil
-}
-
+// Общая сумма за последний месяц
 func GetAmountOfMoneyRub(db *sql.DB) (int, error) {
-	query := `	SELECT SUM(m.actual_sum)
-				FROM monthly_balances m
-				WHERE m.period_id = (
-					select m.period_id
-					from monthly_balances m
-					inner join period p on p.id = m.period_id
-					order by p.name desc limit 1
-				);`
+	query := `	WITH latest AS (
+					SELECT mb.currency_id,
+						mb.actual_sum,
+						ROW_NUMBER() OVER (
+							PARTITION BY mb.type_money_id, mb.currency_id
+							ORDER BY p.name DESC
+						) AS rn
+					FROM monthly_balances mb
+					JOIN period p ON p.id = mb.period_id
+				)
+				SELECT COALESCE(SUM(l.actual_sum * c.cource), 0) AS total_rub
+				FROM latest l
+				JOIN currency c ON c.id = l.currency_id
+				WHERE l.rn = 1;`
 
 	var result int
 	err := db.QueryRow(query).Scan(&result)
@@ -305,14 +206,9 @@ func GetAmountOfMoneyRub(db *sql.DB) (int, error) {
 
 // Возвращает доход за последний месяц
 func GetAmountOfLastIncome(db *sql.DB) (int, error) {
-	query := `SELECT SUM(amount)
-			  FROM incomes 
-			  where period_id = (
-				select i.period_id
-				from incomes i
-				inner join period p on p.id = i.period_id
-				order by p.name desc limit 1
-				);`
+	query := `	SELECT COALESCE(SUM(amount), 0) AS income_last_month
+				FROM incomes
+				WHERE strftime('%Y-%m', date) = (SELECT MAX(name) FROM period);`
 
 	var result int
 	err := db.QueryRow(query).Scan(&result)
@@ -327,29 +223,32 @@ func GetAmountOfLastIncome(db *sql.DB) (int, error) {
 
 // Возвращает прирост/уменьшение общей суммы относительно предыдущего периода
 func GetTotalLastChange(db *sql.DB) (int, error) {
-	query := `	WITH totals AS (
-				SELECT
-					mb.period_id,
-					p.name AS period_name,
-					SUM(mb.actual_sum) AS total_sum
-				FROM monthly_balances mb
-				JOIN period p ON p.id = mb.period_id
-				GROUP BY mb.period_id, p.name
-			),
-			ranked AS (
-				SELECT
-					period_id,
-					period_name,
-					total_sum,
-					LAG(total_sum) OVER (ORDER BY period_name) AS prev_total
-				FROM totals
-			)
-			SELECT
-				total_sum - prev_total   AS diff
-			FROM ranked
-			ORDER BY period_name DESC
-			LIMIT 1;
-			;`
+	query := `	WITH ranked AS (
+					SELECT name, ROW_NUMBER() OVER (ORDER BY name DESC) AS rn
+					FROM period
+				),
+				targets AS (
+					SELECT rn, name FROM ranked WHERE rn IN (1, 2)   -- 1 = последний, 2 = предыдущий
+				),
+				balances AS (
+					SELECT t.rn AS target_rn,
+						mb.currency_id,
+						mb.actual_sum,
+						ROW_NUMBER() OVER (
+							PARTITION BY t.rn, mb.type_money_id, mb.currency_id
+							ORDER BY p.name DESC
+						) AS rk
+					FROM targets t
+					CROSS JOIN monthly_balances mb
+					JOIN period p ON p.id = mb.period_id
+					WHERE p.name <= t.name
+				)
+				SELECT COALESCE(SUM(CASE WHEN b.target_rn = 1 THEN b.actual_sum * c.cource END), 0)
+					- COALESCE(SUM(CASE WHEN b.target_rn = 2 THEN b.actual_sum * c.cource END), 0)
+					AS change_rub
+				FROM balances b
+				JOIN currency c ON c.id = b.currency_id
+				WHERE b.rk = 1;`
 
 	var result int
 	err := db.QueryRow(query).Scan(&result)

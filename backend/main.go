@@ -16,62 +16,6 @@ type Server struct {
 	db *sql.DB
 }
 
-func (s *Server) GetAllIncomesHandler(w http.ResponseWriter, r *http.Request) {
-	result, err := calculate.GetAllIncomes(s.db)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Ошибка сервера:\n%s", err), http.StatusInternalServerError)
-		return
-	}
-
-	// Указываем, что будем отправлять в формате JSON
-	w.Header().Set("Content-Type", "application/json")
-	// Кодируем срез в json и отправляем
-	json.NewEncoder(w).Encode(result)
-}
-
-func (s *Server) GetIncomesByMonthHandler(w http.ResponseWriter, r *http.Request) {
-	month := r.URL.Query().Get("period")
-	result, err := calculate.GetIncomesByMonth(s.db, month)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Ошибка сервера:\n%s", err), http.StatusInternalServerError)
-		return
-	}
-
-	// Указываем, что будем отправлять в формате JSON
-	w.Header().Set("Content-Type", "application/json")
-	// Кодируем срез в json и отправляем
-	json.NewEncoder(w).Encode(result)
-}
-
-func (s *Server) GetAllIncomesRecordsByMonthHandler(w http.ResponseWriter, r *http.Request) {
-	month := r.URL.Query().Get("period")
-	result, err := calculate.GetAllIncomesRecordsByMonth(s.db, month)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Ошибка сервера:\n%s", err), http.StatusInternalServerError)
-		return
-	}
-
-	// Указываем, что будем отправлять в формате JSON
-	w.Header().Set("Content-Type", "application/json")
-	// Кодируем срез в json и отправляем
-	json.NewEncoder(w).Encode(result)
-}
-
-func (s *Server) GetIncomesRecordsByRangeHandler(w http.ResponseWriter, r *http.Request) {
-	start_month := r.URL.Query().Get("from")
-	end_month := r.URL.Query().Get("to")
-	result, err := calculate.GetIncomesRecordsByRange(s.db, start_month, end_month)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Ошибка сервера:\n%s", err), http.StatusInternalServerError)
-		return
-	}
-
-	// Указываем, что будем отправлять в формате JSON
-	w.Header().Set("Content-Type", "application/json")
-	// Кодируем срез в json и отправляем
-	json.NewEncoder(w).Encode(result)
-}
-
 func (s *Server) GetAmountOfMoneyRubHandler(w http.ResponseWriter, r *http.Request) {
 	result, err := calculate.GetAmountOfMoneyRub(s.db)
 	if err != nil {
@@ -130,10 +74,6 @@ func main() {
 
 	server := Server{db}
 
-	http.HandleFunc("/api/1", server.GetAllIncomesHandler)
-	http.HandleFunc("/api/2", server.GetIncomesByMonthHandler)
-	http.HandleFunc("/api/3", server.GetAllIncomesRecordsByMonthHandler)
-	http.HandleFunc("/api/4", server.GetIncomesRecordsByRangeHandler)
 	http.HandleFunc("/api/5", server.GetAmountOfMoneyRubHandler)
 	http.HandleFunc("/api/6", server.GetAmountOfLastIncomeHandler)
 	http.HandleFunc("/api/7", server.GetTotalLastChangeHandler)
