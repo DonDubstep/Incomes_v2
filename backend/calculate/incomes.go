@@ -164,18 +164,6 @@ func FillTable(db *sql.DB) {
 	log.Print("filled")
 }
 
-type IncomesByPeriod struct {
-	Period string  `json:"period"`
-	Total  float64 `json:"total"`
-}
-
-type IncomesRecords struct {
-	Date        string  `json:"date"`
-	Total       float64 `json:"total"`
-	Description string  `json:"description"`
-	TypeOfMoney string  `json:"type_money"`
-}
-
 // Общая сумма за последний месяц
 func GetAmountOfMoneyRub(db *sql.DB) (int, error) {
 	query := `	WITH latest AS (
@@ -261,4 +249,84 @@ func GetTotalLastChange(db *sql.DB) (int, error) {
 	return result, nil
 }
 
+type TotalInCurrencies struct {
+	Currency   string  `json:"currency"`
+	Total      float64 `json:"total"`
+	Type_money string  `json:"type_money"`
+}
+
 // Возвращает сумму денег в каждой валюте в виде таблицы
+func GetTotalAmountInCurrencies(db *sql.DB) ([]TotalInCurrencies, error) {
+
+	query := `	WITH latest AS (
+					SELECT mb.currency_id,
+						mb.type_money_id,
+						mb.actual_sum,
+						ROW_NUMBER() OVER (
+							PARTITION BY mb.type_money_id, mb.currency_id
+							ORDER BY p.name DESC
+						) AS rn
+					FROM monthly_balances mb
+					JOIN period p ON p.id = mb.period_id
+				)
+				SELECT c.name       AS "Currency.name",
+					COALESCE(l.actual_sum*c.cource,0) AS "monthly_balances.actual_sum",
+					tm.name      AS "type_money.name"
+				FROM latest l
+				JOIN currency c    ON c.id  = l.currency_id
+				JOIN type_money tm ON tm.id = l.type_money_id
+				WHERE l.rn = 1
+				ORDER BY c.name, tm.name;`
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка выполнения запроса: %w", err)
+	}
+
+	var result []TotalInCurrencies
+	for rows.Next() {
+		var el TotalInCurrencies
+		if err := rows.Scan(&el.Currency, &el.Total, &el.Type_money); err != nil {
+			return nil, fmt.Errorf("ошибка чтения строки %w", err)
+		}
+		result = append(result, el)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("ошибка при обходе результата: %w", err)
+	}
+	return result, nil
+}
+
+type LastIncomes struct {
+	Description string  `json:"description"`
+	Amount      float64 `json:"amount"`
+	Date        string  `json:"date"`
+}
+
+// Возвращает 3 последних дохода
+func GetLast3Incomes(db *sql.DB) ([]LastIncomes, error) {
+	query := `	SELECT COALESCE(description,'') AS "incomes.description",
+					amount      AS "incomes.amount",
+					date        AS "incomes.date"
+				FROM incomes
+				ORDER BY date DESC, id DESC
+				LIMIT 3;`
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка выполнения запроса: %w", err)
+	}
+
+	var result []LastIncomes
+	for rows.Next() {
+		var el LastIncomes
+		if err := rows.Scan(&el.Description, &el.Amount, &el.Date); err != nil {
+			return nil, fmt.Errorf("ошибка чтения строки %w", err)
+		}
+		result = append(result, el)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("ошибка при обходе результата: %w", err)
+	}
+	return result, nil
+}
