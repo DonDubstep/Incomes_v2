@@ -90,8 +90,10 @@ func CreateTable(db *sql.DB) {
 			amount INTEGER NOT NULL,
 			description TEXT,
 			type_money_id INTEGER NOT NULL,
+			currency_id INTEGER NOT NULL,
 			date TEXT NOT NULL,
-			FOREIGN KEY (type_money_id) REFERENCES type_money(id)
+			FOREIGN KEY (type_money_id) REFERENCES type_money(id),
+			FOREIGN KEY (currency_id) REFERENCES currency(id)
 		);
 
 		CREATE TABLE IF NOT EXISTS outcomes (
@@ -150,12 +152,13 @@ func FillTable(db *sql.DB) {
 			(5, 2, 1, 110000);
 
 		INSERT INTO incomes 
-			(amount, Description, type_money_id, date)
+			(amount, Description, type_money_id, currency_id, date)
 		VALUES 
-			(20000, NULL, 1, '2026-05-29'),
-			(30000, NULL, 1, '2026-06-29'),
-			(40000, NULL, 1, '2026-07-29'),
-			(10000, NULL, 2, '2026-08-10');
+			(20000, NULL, 1, 1, '2026-05-29'),
+			(30000, NULL, 1, 1, '2026-06-29'),
+			(40000, NULL, 1, 1, '2026-07-29'),
+			(100,   NULL, 1, 2, '2026-07-20'),
+			(10000, NULL, 2, 1, '2026-08-10');
 
 	`)
 	if err != nil {
@@ -321,6 +324,72 @@ func GetLast3Incomes(db *sql.DB) ([]LastIncomes, error) {
 	for rows.Next() {
 		var el LastIncomes
 		if err := rows.Scan(&el.Description, &el.Amount, &el.Date); err != nil {
+			return nil, fmt.Errorf("ошибка чтения строки %w", err)
+		}
+		result = append(result, el)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("ошибка при обходе результата: %w", err)
+	}
+	return result, nil
+}
+
+// Возвращает сумму доходов за все периоды
+func GetSumIncomes(db *sql.DB) (int, error) {
+	query := `	SELECT COALESCE(SUM(i.amount * c.cource),0)
+				FROM incomes i
+				JOIN currency c ON i.currency_id = c.id;`
+
+	var result int
+	err := db.QueryRow(query).Scan(&result)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, fmt.Errorf("запрос вернул ничего GetAmountOfLastIncome %w", err) // Возвращаем 0 и nil (ошибки нет, просто ничего не нашли)
+		}
+		return 0, fmt.Errorf("ошибка запроса GetAmountOfLastIncome %w", err)
+	}
+	return result, nil
+}
+
+type IncomeRecord struct {
+	Period string `json:"period"`
+	Amount int    `json:"amount"`
+}
+
+// Возвращает 3 последних дохода
+func GetAllIncomesRecords(db *sql.DB) ([]IncomeRecord, error) {
+	query := `	SELECT CASE SUBSTR(p.name, 6, 2)
+					WHEN '01' THEN 'Январь'
+					WHEN '02' THEN 'Февраль'
+					WHEN '03' THEN 'Март'
+					WHEN '04' THEN 'Апрель'
+					WHEN '05' THEN 'Май'
+					WHEN '06' THEN 'Июнь'
+					WHEN '07' THEN 'Июль'
+					WHEN '08' THEN 'Август'
+					WHEN '09' THEN 'Сентябрь'
+					WHEN '10' THEN 'Октябрь'
+					WHEN '11' THEN 'Ноябрь'
+					WHEN '12' THEN 'Декабрь'
+				END || ' ' || SUBSTR(p.name, 1, 4) AS period_name,
+				COALESCE(SUM(i.amount * c.cource), 0) AS total_amount_rub
+			FROM period p
+			LEFT JOIN incomes i 
+				ON p.name = strftime('%Y-%m', i.date)
+			LEFT JOIN currency c 
+				ON i.currency_id = c.id
+			GROUP BY p.id, p.name
+			ORDER BY p.name;`
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка выполнения запроса: %w", err)
+	}
+
+	var result []IncomeRecord
+	for rows.Next() {
+		var el IncomeRecord
+		if err := rows.Scan(&el.Period, &el.Amount); err != nil {
 			return nil, fmt.Errorf("ошибка чтения строки %w", err)
 		}
 		result = append(result, el)

@@ -81,6 +81,32 @@ func (s *Server) GetLast3IncomesHandlerHandler(w http.ResponseWriter, r *http.Re
 	json.NewEncoder(w).Encode(result)
 }
 
+func (s *Server) GetSumIncomesHandler(w http.ResponseWriter, r *http.Request) {
+	result, err := calculate.GetSumIncomes(s.db)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Ошибка сервера:\n%s", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Указываем, что будем отправлять в формате JSON
+	w.Header().Set("Content-Type", "application/json")
+	// Кодируем срез в json и отправляем
+	json.NewEncoder(w).Encode(result)
+}
+
+func (s *Server) GetAllIncomesRecordsHandler(w http.ResponseWriter, r *http.Request) {
+	result, err := calculate.GetSumIncomes(s.db)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Ошибка сервера:\n%s", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Указываем, что будем отправлять в формате JSON
+	w.Header().Set("Content-Type", "application/json")
+	// Кодируем срез в json и отправляем
+	json.NewEncoder(w).Encode(result)
+}
+
 func main() {
 	sql_path := os.Getenv("DB_PATH")
 	if sql_path == "" {
@@ -106,6 +132,8 @@ func main() {
 	http.HandleFunc("/api/7", server.GetTotalLastChangeHandler)
 	http.HandleFunc("/api/8", server.GetTotalAmountInCurrenciesHandler)
 	http.HandleFunc("/api/9", server.GetLast3IncomesHandlerHandler)
+	http.HandleFunc("/api/10", server.GetSumIncomesHandler)
+	// http.HandleFunc("/api/11", server.GetAllIncomesRecordsHandler)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8001"
