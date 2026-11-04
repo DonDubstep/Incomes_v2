@@ -1,0 +1,23 @@
+.wrapper { position: relative; display: inline-flex; align-items: center; color: #aaa; }
+
+.select {
+  appearance: none;
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  padding: 10px 36px 10px 16px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.select:hover, .select:focus-visible { border-color: #3b5e43; }
+.select option { background: #1c1c1e; color: #fff; }
+
+.withIcon { padding-right: 44px; }
+.icon { position: absolute; right: 36px; pointer-events: none; font-size: 14px; }
+.chevron { position: absolute; right: 14px; pointer-events: none; }
+.withIcon ~ .chevron { display: none; }
+.withIcon ~ .icon { right: 14px; }

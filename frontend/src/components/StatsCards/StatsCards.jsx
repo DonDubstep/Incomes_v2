@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react';
 import styles from './StatsCards.module.css';
 
+function moneyFormat(value) {
+  // Number(value) защищает функцию, если на вход случайно передадут строку '100000' вместо числа
+  return Number(value).toLocaleString('ru-RU', {
+    maximumFractionDigits: 0
+  });
+}
+
 function StatsCards() {
   const [stats, setStats] = useState([]);
   const [loading, setLoading] = useState(true); 
@@ -42,7 +49,7 @@ function StatsCards() {
       {mainCard && (
         <div className={`${styles.card} ${styles.mainCard}`}>
           <div className={styles.title}>{mainCard.title}</div>
-          <div className={styles.largeValue}>{mainCard.value} ₽</div>
+          <div className={styles.largeValue}>{moneyFormat(mainCard.value)} ₽</div>
         </div>
       )}
 
@@ -51,7 +58,7 @@ function StatsCards() {
         {secondaryCards.map((card) => (
           <div key={card.id} className={styles.card}>
             <div className={styles.title}>{card.title}</div>
-            <div className={styles.value}>{card.value} ₽</div>
+            <div className={styles.value}>{moneyFormat(card.value)} ₽</div>
           </div>
         ))}
       </div>

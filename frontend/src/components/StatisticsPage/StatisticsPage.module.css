@@ -1,0 +1,56 @@
+.card {
+  background-color: #1c1c1e;
+  border: 1px solid #2c2c2e;
+  border-radius: 12px;
+  padding: 24px 28px 28px;
+  box-sizing: border-box;
+  margin-bottom: 24px;
+}
+
+.cardHeader { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+
+.label { color: #8e8e93; font-size: 14px; margin-bottom: 8px; }
+.bigValue { font-size: 40px; font-weight: 600; line-height: 1.1; }
+.delta { margin-top: 12px; font-size: 14px; color: #8e8e93; }
+.up { color: #4caf50; }
+.down { color: #e57373; }
+.error { margin-top: 12px; color: #e57373; font-size: 14px; }
+
+.summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.summaryCard {
+  background-color: #1c1c1e;
+  border: 1px solid #2c2c2e;
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.summaryCard .label { margin-bottom: 10px; }
+.summaryTitle { font-size: 20px; font-weight: 600; }
+.summaryValue { margin-top: 10px; color: #8e8e93; font-size: 16px; }
+
+.nav { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 16px; }
+.navLabel { min-width: 150px; text-align: center; font-size: 14px; color: #aaa; }
+.navBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.navBtn:hover:not(:disabled) { border-color: #3b5e43; }
+.navBtn:disabled { opacity: 0.35; cursor: default; }
+
+.rangeBar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.rangeBar .label { margin-bottom: 0; }
+.segmented { display: inline-flex; padding: 3px; gap: 2px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; }
+.segBtn { padding: 6px 14px; border: none; border-radius: 6px; background: none; color: #aaa; font: inherit; font-size: 13px; cursor: pointer; }
+.segBtn:hover { color: #fff; }
+.segActive { background: #3b5e43; color: #fff; }
